@@ -13,4 +13,16 @@ app.use(express.json({limit:"16kb"})) // converting body request to json format 
 app.use(express.urlencoded({extended:true , limit:"16kb"})) //  parses incoming requests with URL-encoded payloads ,  allows parsing of nested objects
 app.use(express.static("public")) // used for storing static file on server
 app.use(cookieParser())
-export default app
+
+
+// routes import
+
+import router from "./routes/user.routes.js";
+
+
+// routes declaration
+app.use("/api/v1/users" , router) // http:localhost:8000/api/v1/users/register
+
+
+
+export {app}
