@@ -51,18 +51,21 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
+// with the help of pre is hook we hashing the password just before save
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
-  this.password =await bcrypt.hash(this.password, 10);
+  this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
+// Here we made our own method to check the password to check the user password with database password
 userSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
 userSchema.methods.generateAccessToken = async function () {
+  // sign methods generate tokens
   return jwt.sign({
     _id:this._id,
     email:this.email,

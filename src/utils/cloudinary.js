@@ -14,6 +14,7 @@ const uploadOnCloudinary = async (localFilePath) =>{
         // console.log("File is uploaded sucessfully" , response)
         return response; // try to console.log(response.url) and see what's inside of it
     } catch (error) {
+        // we are deleting because its file is already on localStorage which fails to upload which leads to error
         fs.unlinkSync(localFilePath);// delete local saved temporary file as the upload operation got failed
         return null
     }

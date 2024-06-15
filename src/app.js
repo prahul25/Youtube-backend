@@ -1,18 +1,19 @@
-import  express  from "express";
-import cookieParser from "cookie-parser" // used for performing crud operation
+import express from "express"
 import cors from "cors"
+import cookieParser from "cookie-parser"
+
 const app = express()
 
 app.use(cors({
-    origin:process.env.CORS_ORIGIN,
-    credentials:true,
-    
+    origin: process.env.CORS_ORIGIN,
+    credentials: true
 }))
 
-app.use(express.json({limit:"16kb"})) // converting body request to json format and setting up limit how much data upto we accepting
-app.use(express.urlencoded({extended:true , limit:"16kb"})) //  parses incoming requests with URL-encoded payloads ,  allows parsing of nested objects
-app.use(express.static("public")) // used for storing static file on server
-app.use(cookieParser())
+app.use(express.json({limit: "16kb"}))
+app.use(express.urlencoded({extended: true, limit: "16kb"}))
+app.use(express.static("public"))
+app.use(cookieParser()) // this line through we are getting cookie from response
+
 
 
 // routes import
