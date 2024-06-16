@@ -61,6 +61,10 @@ userSchema.pre("save", async function (next) {
 
 // Here we made our own method to check the password to check the user password with database password
 userSchema.methods.isPasswordCorrect = async function (password) {
+  // password = await bcrypt.hash(password, 10);
+  // console.log(this.password)
+  // console.log(password)
+  // console.log(this)
   return await bcrypt.compare(password, this.password);
 };
 
