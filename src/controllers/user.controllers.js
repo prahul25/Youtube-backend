@@ -1,9 +1,11 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/apiError.js";
 import { User } from "../models/user.models.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { uploadOnCloudinary} from "../utils/cloudinary.js";
+import {removingCloudinaryFile} from "../utils/removingCloudinaryFile.js"
 import { ApiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
+import { publicId } from "../utils/getPublicIdFromUrl.js";
 const generateAccessAndRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId);
@@ -304,6 +306,8 @@ console.log(existedUserName)
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
   // console.log(req.file.path,"uy")
+  const oldAvatar = req.user.avatar
+  console.log(oldAvatar)
   const avatarLocalPath = req.file.path;
 
   if (!avatarLocalPath) {
@@ -315,8 +319,16 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
   if (!avatar) {
     throw new ApiError(400, "Failed to upload avatar");
   }
-  // console.log(req.user , "req user id")
 
+  // first get public id from url
+  const publicIdFromUrl = publicId(oldAvatar)
+  // console.log(req.user , "req user id")
+  const deletingOldFileFromCloudinary = await removingCloudinaryFile(publicIdFromUrl)
+  
+  if(deletingOldFileFromCloudinary.result !== 'ok'){
+    throw new ApiError(400 , "Failed to delete old cloundinary file")
+  }
+  
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
@@ -325,6 +337,8 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     { new: true }
   ).select("-password");
   // console.log(user)
+
+
   return res
     .status(200)
     .json(new ApiResponse(200, { user }, "Avatar updated successfully"));
@@ -332,6 +346,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 
 const updateUserCoverImage = asyncHandler(async (req, res) => {
   // console.log(req.file)
+  const oldCoverImage = req.user.coverImage
   const coverImagwLocalPath = req.file.path;
   if (!coverImagwLocalPath) {
     throw new ApiError(400, "Cover Image file is missing");
@@ -342,7 +357,14 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
   if (!coverImage) {
     throw new ApiError(400, "Failed to upload cover image");
   }
+  // console.log(oldCoverImage)
+  const publicIdFromUrl = publicId(oldCoverImage)
 
+  const deletingOldFileFromCloudinary = await removingCloudinaryFile(publicIdFromUrl)
+
+  if(deletingOldFileFromCloudinary.result !== 'ok'){
+    throw new ApiError(400 , "Failed to delete old cloundinary file")
+  }
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
