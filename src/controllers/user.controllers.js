@@ -39,7 +39,7 @@ const registerUser = asyncHandler(async (req, res) => {
   // step 7 : remove password and refresh token field from response
   // step 8 : check for user creation
   // step 9 : return response
-
+  
   const { username, email, fullName, password } = req.body;
 
   if (
@@ -114,15 +114,16 @@ const loginUser = asyncHandler(async (req, res) => {
   // Step 5 : Send cookies
 
   const { username, email, password } = req.body;
-
+  // const existedUserName = await User.findOne({ username: username });
+  // console.log(existedUserName , "trying to console");
   if (!(username || email)) {
     throw new ApiError(400, "Username or Email field is required");
   }
-
   const user = await User.findOne({
     $or: [{ username }, { email }],
   });
-
+  
+  
   if (!user) {
     throw new ApiError(404, "User does not Exist");
   }
@@ -169,11 +170,11 @@ const loginUser = asyncHandler(async (req, res) => {
 
 const logoutUser = asyncHandler(async (req, res) => {
   // Step 1 : Just clear the tokens and also the cookies in which we sending user details
-  await User.findByIdAndUpdate(
+  const logoutUser = await User.findByIdAndUpdate(
     req.user._id,
     {
-      $set: {
-        refreshToken: undefined,
+      $unset: {
+        refreshToken: 1, // unset operator remove whole refresh token field
       },
     },
     {
@@ -181,6 +182,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     }
   );
 
+  
   const options = {
     // modified through only server not by frontend
     httpOnly: true,
@@ -267,7 +269,7 @@ const updatePassword = asyncHandler(async (req, res) => {
 });
 
 const getUserDetails = asyncHandler(async (req, res) => {
-  console.log(req.user);
+  // console.log(req.user);
   const user = req.user;
   return res
     .status(200)
@@ -282,7 +284,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
   }
 
   const existedUserName = await User.findOne({ username: newUserName });
-  console.log(existedUserName);
+  // console.log(existedUserName);
   if (existedUserName) {
     throw new ApiError(
       400,
@@ -311,7 +313,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 const updateUserAvatar = asyncHandler(async (req, res) => {
   // console.log(req.file.path,"uy")
   const oldAvatar = req.user.avatar;
-  console.log(oldAvatar);
+  // console.log(oldAvatar);
   const avatarLocalPath = req.file.path;
 
   if (!avatarLocalPath) {
