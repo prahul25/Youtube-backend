@@ -33,7 +33,11 @@ const videoSchema = new Schema({
     owner:{
         type:Schema.Types.ObjectId,  //connects to user id in users collection
         ref:"User"   //refers to the User model
-    }
+    },
+    userWatched:[{
+        type:Schema.Types.ObjectId,  //connects to user id in users collection
+        ref:"User"   //refers to the User model
+    }]
 },{timestamps:true})
 
 videoSchema.plugin(mongooseAggregatePaginate)

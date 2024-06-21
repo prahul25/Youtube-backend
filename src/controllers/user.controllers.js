@@ -462,7 +462,9 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     );
 });
 
-const getWatchHistory = asyncHandler(async (req, res) => {
+// const getUploadedVideos = asyncHandler
+
+const getUploadedVideos = asyncHandler(async (req, res) => {
   const user = await User.aggregate([
     {
       $match: {
@@ -472,39 +474,39 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     {
       $lookup: {
         from: "videos", // here we have to find for Video model but in database all model are lowercased and it plural
-        localField: "watchHistory",
+        localField: "videoUpload",
         foreignField: "_id",
-        as: "watchHistory",
-        pipeline: [
-          {
-          $lookup:{
-            from:"owner",
-            localField:"avatar",
-            foreignField:"_id",
-            as:"owner",
-            pipeline:[
-              {
-                $project:{
-                  fullName:1,
-                  username:1,
-                  avatar:1
-                }
-              }
-            ]
-          }
-        },
-      {
-        $addFields:{ // modifying the owner 
-          owner:{
-            $first:"$owner"
-          }
-        }
-      }],
+        as: "videoUploaded"
+      //   pipeline: [
+      //     {
+      //     $lookup:{
+      //       from:"users",
+      //       localField:"owner",
+      //       foreignField:"_id",
+      //       as:"owner",
+      //       pipeline:[
+      //         {
+      //           $project:{
+      //             fullName:1,
+      //             username:1,
+      //             avatar:1
+      //           }
+      //         }
+      //       ]
+      //     }
+      //   },
+      // {
+      //   $addFields:{ // modifying the owner 
+      //     owner:{
+      //       $first:"$owner"
+      //     }
+      //   }
+      // }],
       },
     },
   ]);
-
-  return res.status(200).json(new ApiResponse(200 , user[0].watchHistory , "Watched history fetched successfully"))
+// console.log(user[0].videoUploaded , "trying to log console")
+  return res.status(200).json(new ApiResponse(200 , user[0].videoUploaded , "Uploaded history fetched successfully"))
 });
 export {
   registerUser,
@@ -517,5 +519,5 @@ export {
   updateUserAvatar,
   updateUserCoverImage,
   getUserChannelProfile,
-  getWatchHistory,
+  getUploadedVideos
 };
