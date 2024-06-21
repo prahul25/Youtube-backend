@@ -34,6 +34,10 @@ const videoSchema = new Schema({
         type:Schema.Types.ObjectId,  //connects to user id in users collection
         ref:"User"   //refers to the User model
     },
+    videosUploaded:{
+        type:Schema.Types.ObjectId,  //connects to user id in users collection
+        ref:"User"
+    },
     userWatched:[{
         type:Schema.Types.ObjectId,  //connects to user id in users collection
         ref:"User"   //refers to the User model

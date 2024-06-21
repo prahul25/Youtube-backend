@@ -1,3 +1,4 @@
+import { User } from "../models/user.models.js";
 import { Video } from "../models/video.models.js";
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
@@ -44,35 +45,46 @@ const uploadVideoAndInfo = asyncHandler(async (req, res) => {
     // views
   });
 
-  const videoUploadAggregationPipeline = await Video.aggregate([
-    {
-      $match: {
-        _id: new mongoose.Types.ObjectId(video._id),
-      },
-    },
-    {
-      $lookup: {
-        from: "users",
-        localField: "_id",
-        foreignField: "videoUpload",
-        as: "videoFiles",
-      },
-    },
-    {
-      $project: {
-        _id: 1, // if you put id = 0 you can't able to push this user
-        videoFile: 1,
-        thumbnail: 1,
-        title: 1,
-        description: 1,
-        createdAt: 1,
-      },
-    },
-  ]);
-
-  req.user.videoUpload.push(videoUploadAggregationPipeline[0]);
+  // console.log(video)
+  // console.log(videoUploadAggregationPipeline[videoUploadAggregationPipeline.length-1] , "knowing lenght")
+  // console.log(videoUploadAggregationPipeline, "length")
+  req.user.videoUpload.push(video._id);
+  // console.log(req.user.videoUpload ,"videolpad")
   await req.user.save({ validateBeforeSave: false });
 
+  // console.log(video)
+  // const videoUploadAggregationPipeline = await Video.aggregate([
+  //   {
+  //     $match: {
+  //       _id: new mongoose.Types.ObjectId(video.owner),
+  //     },
+  //   },
+  //   {
+  //     $lookup: {
+  //       from: "users",
+  //       localField: "owner",
+  //       foreignField: "_id",
+  //       as: "videoFiles",
+  //       pipeline:[
+  //         {
+  //           $project: {
+  //             username:1,
+  //             fullName:1,
+  //             avatar:1
+  //           },
+  //         }
+  //       ]
+  //     },
+  //   }
+  // {
+  //     $addFields:{ // modifying the owner
+  //       videoFiles:{
+  //         $first:"$videoFiles"
+  //       }
+  //     }
+  //   }
+  // ]);
+  // console.log(videoUploadAggregationPipeline , "consoling video aggregation")
   return res
     .status(200)
     .json(new ApiResponse(200, video, "Successfully video uploaded"));
@@ -80,4 +92,75 @@ const uploadVideoAndInfo = asyncHandler(async (req, res) => {
 
 //Get all the video of all user to populate all the video like the youtube landing page
 
-export { uploadVideoAndInfo};
+const getAllVideos = asyncHandler(async (req, res) => {
+  const {
+    page = 1,
+    limit = 10,
+    query,
+    // sortBy,
+    sortType /*userId*/,
+  } = req.query;
+  // console.log({ page, limit, query, /*sortBy */ sortType /*userId*/ });
+  
+  let sortField;
+  if (sortType === "recent") {
+    sortField = "createdAt";
+  } else if (sortType === "views") {
+    sortField = "views";
+  } else if (sortType === "duration") {
+    sortField = "duration";
+  } else {
+    sortField = "createdAt"; // Default sorting field if sortType is not recognized
+  }
+
+  const allVideos = await Video.aggregate([
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner",
+      },
+    },
+    {
+      $unwind: {
+        path: "$owner",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $project: {
+        __v: 0,
+        updatedAt: 0,
+        "owner.password": 0,
+        "owner.videoUpload": 0,
+        "owner.createdAt": 0,
+        "owner.updatedAt": 0,
+        "owner.email": 0,
+        "owner.coverImage": 0,
+        "owner.watchHistory": 0,
+        "owner.refreshToken": 0,
+        "owner.__v": 0,
+      },
+    },
+    {
+      $sort: {
+        [sortField]: -1 // Sort in descending order by the selected field
+      }
+    },
+    {
+      $skip: (page - 1) * limit
+    },
+    {
+      $limit: parseInt(limit)
+    }
+  ]);
+  if(!allVideos){
+    throw new ApiError(400 , "Something went wrong at backend")
+  }
+  return res
+  .status(200)
+  .json(new ApiResponse(200 , allVideos , "All videos fetched successfully"));
+});
+
+export { uploadVideoAndInfo, getAllVideos };

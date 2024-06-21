@@ -39,7 +39,7 @@ const registerUser = asyncHandler(async (req, res) => {
   // step 7 : remove password and refresh token field from response
   // step 8 : check for user creation
   // step 9 : return response
-  
+
   const { username, email, fullName, password } = req.body;
 
   if (
@@ -122,8 +122,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const user = await User.findOne({
     $or: [{ username }, { email }],
   });
-  
-  
+
   if (!user) {
     throw new ApiError(404, "User does not Exist");
   }
@@ -182,7 +181,6 @@ const logoutUser = asyncHandler(async (req, res) => {
     }
   );
 
-  
   const options = {
     // modified through only server not by frontend
     httpOnly: true,
@@ -476,37 +474,56 @@ const getUploadedVideos = asyncHandler(async (req, res) => {
         from: "videos", // here we have to find for Video model but in database all model are lowercased and it plural
         localField: "videoUpload",
         foreignField: "_id",
-        as: "videoUploaded"
-      //   pipeline: [
-      //     {
-      //     $lookup:{
-      //       from:"users",
-      //       localField:"owner",
-      //       foreignField:"_id",
-      //       as:"owner",
-      //       pipeline:[
-      //         {
-      //           $project:{
-      //             fullName:1,
-      //             username:1,
-      //             avatar:1
-      //           }
-      //         }
-      //       ]
-      //     }
-      //   },
-      // {
-      //   $addFields:{ // modifying the owner 
-      //     owner:{
-      //       $first:"$owner"
-      //     }
-      //   }
-      // }],
+        as: "videoUploaded",
+        pipeline: [
+          {
+            $project: {
+              videoFile: 1,
+              thumbnail: 1,
+              title: 1,
+              duration: 1,
+              views: 1,
+              userWatched: 1,
+            },
+          },
+          // {
+          // $lookup:{
+          //   from:"users",
+          //   localField:"owner",
+          //   foreignField:"_id",
+          //   as:"owner",
+          // pipeline:[
+          //   {
+          //     $project:{
+          //       fullName:1,
+          //       username:1,
+          //       avatar:1
+          //     }
+          //   }
+          // ]
+          //   }
+          // },
+          // {
+          //   $addFields:{ // modifying the owner
+          //     owner:{
+          //       $first:"$owner"
+          //     }
+          //   }
+          // }
+        ],
       },
     },
   ]);
-// console.log(user[0].videoUploaded , "trying to log console")
-  return res.status(200).json(new ApiResponse(200 , user[0].videoUploaded , "Uploaded history fetched successfully"))
+  // console.log(user[0].videoUploaded , "trying to log console")
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        user[0].videoUploaded,
+        "Uploaded history fetched successfully"
+      )
+    );
 });
 export {
   registerUser,
@@ -519,5 +536,5 @@ export {
   updateUserAvatar,
   updateUserCoverImage,
   getUserChannelProfile,
-  getUploadedVideos
+  getUploadedVideos,
 };
