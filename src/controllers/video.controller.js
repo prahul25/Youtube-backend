@@ -41,12 +41,10 @@ const uploadVideoAndInfo = asyncHandler(async (req, res) => {
     videoFile: videoFile.url,
     duration: videoFile.duration,
     owner: req.user._id, // here we storing only the owner of video who just upload the so that if i got to the profile of the user than if i want to check how many video i have uploaded i will as that point
-    
   });
 
-  
   req.user.videoUpload.push(video._id);
-  
+
   await req.user.save({ validateBeforeSave: false });
 
   return res
@@ -57,13 +55,8 @@ const uploadVideoAndInfo = asyncHandler(async (req, res) => {
 // get all the video of all user to populate all the video like the youtube landing page
 
 const getAllVideos = asyncHandler(async (req, res) => {
-  const {
-    page = 1,
-    limit = 10,
-    sortType /*userId*/,
-  } = req.query;
-  
-  
+  const { page = 1, limit = 10, sortType /*userId*/ } = req.query;
+
   let sortField;
   if (sortType === "recent") {
     sortField = "createdAt";
@@ -107,28 +100,27 @@ const getAllVideos = asyncHandler(async (req, res) => {
     },
     {
       $sort: {
-        [sortField]: -1 // Sort in descending order by the selected field
-      }
+        [sortField]: -1, // Sort in descending order by the selected field
+      },
     },
     {
-      $skip: (page - 1) * limit
+      $skip: (page - 1) * limit,
     },
     {
-      $limit: parseInt(limit)
-    }
+      $limit: parseInt(limit),
+    },
   ]);
-  if(!allVideos){
-    throw new ApiError(400 , "Something went wrong at backend")
+  if (!allVideos) {
+    throw new ApiError(400, "Something went wrong at backend");
   }
   return res
-  .status(200)
-  .json(new ApiResponse(200 , allVideos , "All videos fetched successfully"));
+    .status(200)
+    .json(new ApiResponse(200, allVideos, "All videos fetched successfully"));
 });
 
 // get the video by video id
 const videoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-
 
   const videoOwner = await Video.aggregate([
     {
@@ -164,24 +156,64 @@ const videoById = asyncHandler(async (req, res) => {
         "owner.refreshToken": 0,
         "owner.__v": 0,
       },
-    }
+    },
   ]);
 
   if (!videoOwner.length) {
-    throw new ApiError(404 , "Video not found, Make sure to give correct video id")
+    throw new ApiError(
+      404,
+      "Video not found, Make sure to give correct video id"
+    );
   }
-
 
   const updateResult = await Video.updateOne(
     { _id: new mongoose.Types.ObjectId(videoId) },
     { $addToSet: { userWatched: req.user._id } } // $addToSet prevents duplicates
   );
 
-
-  const updatedVideo = await Video.findById(videoId).populate('owner', '-password -videoUpload -createdAt -updatedAt -email -coverImage -watchHistory -refreshToken -__v');
+  const updatedVideo = await Video.findById(videoId).populate(
+    "owner",
+    "-password -videoUpload -createdAt -updatedAt -email -coverImage -watchHistory -refreshToken -__v"
+  );
 
   // Return the updated video with necessary fields
-  return res.status(200).json(new ApiResponse(200 ,updatedVideo , "Successfully video fetched by video Id") );
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        updatedVideo,
+        "Successfully video fetched by video Id"
+      )
+    );
 });
 
-export { uploadVideoAndInfo, getAllVideos , videoById};
+const updateVideoDetails = asyncHandler(async (req, res) => {
+  const { title, thumbnail, description } = req.body;
+  const { videoId } = req.params;
+  const userId = req.user._id;
+
+  const video = await Video.findById(videoId);
+
+  if (!video.owner.equals(userId)) {
+    throw new ApiError(400, "User Unautorized to update video details, Only owner of video update video details");
+  }
+  const updatedVideo = await Video.findByIdAndUpdate(
+    videoId,
+    {
+      $set: {
+        title: title,
+        thumbnail,
+        description,
+      },
+    },
+    {
+      new: true,
+    }
+  );
+  
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedVideo, "Video details updated successfully"));
+});
+export { uploadVideoAndInfo, getAllVideos, videoById, updateVideoDetails };
