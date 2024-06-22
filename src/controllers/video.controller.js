@@ -163,4 +163,65 @@ const getAllVideos = asyncHandler(async (req, res) => {
   .json(new ApiResponse(200 , allVideos , "All videos fetched successfully"));
 });
 
-export { uploadVideoAndInfo, getAllVideos };
+// get the video by video id
+const videoById = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
+
+  // Step 1: Retrieve the document
+  const videoOwner = await Video.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(videoId),
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner",
+      },
+    },
+    {
+      $unwind: {
+        path: "$owner",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $project: {
+        __v: 0,
+        updatedAt: 0,
+        "owner.password": 0,
+        "owner.videoUpload": 0,
+        "owner.createdAt": 0,
+        "owner.updatedAt": 0,
+        "owner.email": 0,
+        "owner.coverImage": 0,
+        "owner.watchHistory": 0,
+        "owner.refreshToken": 0,
+        "owner.__v": 0,
+      },
+    }
+  ]);
+
+  if (videoOwner.length === 0) {
+    return res.status(404).json({ message: 'Video not found' });
+  }
+
+  const video = videoOwner[0];
+
+  // Step 2: Update the document using $addToSet to ensure uniqueness
+  const updateResult = await Video.updateOne(
+    { _id: new mongoose.Types.ObjectId(videoId) },
+    { $addToSet: { userWatched: req.user._id } } // $addToSet prevents duplicates
+  );
+
+  // Fetch the updated document
+  const updatedVideo = await Video.findById(videoId).populate('owner', '-password -videoUpload -createdAt -updatedAt -email -coverImage -watchHistory -refreshToken -__v');
+
+  // Return the updated video with necessary fields
+  return res.status(200).json(new ApiResponse(200 ,updatedVideo , "Successfully video fetched by video Id") );
+});
+
+export { uploadVideoAndInfo, getAllVideos , videoById};
