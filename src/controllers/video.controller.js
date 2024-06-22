@@ -41,66 +41,28 @@ const uploadVideoAndInfo = asyncHandler(async (req, res) => {
     videoFile: videoFile.url,
     duration: videoFile.duration,
     owner: req.user._id, // here we storing only the owner of video who just upload the so that if i got to the profile of the user than if i want to check how many video i have uploaded i will as that point
-    // userWatched:
-    // views
+    
   });
 
-  // console.log(video)
-  // console.log(videoUploadAggregationPipeline[videoUploadAggregationPipeline.length-1] , "knowing lenght")
-  // console.log(videoUploadAggregationPipeline, "length")
+  
   req.user.videoUpload.push(video._id);
-  // console.log(req.user.videoUpload ,"videolpad")
+  
   await req.user.save({ validateBeforeSave: false });
 
-  // console.log(video)
-  // const videoUploadAggregationPipeline = await Video.aggregate([
-  //   {
-  //     $match: {
-  //       _id: new mongoose.Types.ObjectId(video.owner),
-  //     },
-  //   },
-  //   {
-  //     $lookup: {
-  //       from: "users",
-  //       localField: "owner",
-  //       foreignField: "_id",
-  //       as: "videoFiles",
-  //       pipeline:[
-  //         {
-  //           $project: {
-  //             username:1,
-  //             fullName:1,
-  //             avatar:1
-  //           },
-  //         }
-  //       ]
-  //     },
-  //   }
-  // {
-  //     $addFields:{ // modifying the owner
-  //       videoFiles:{
-  //         $first:"$videoFiles"
-  //       }
-  //     }
-  //   }
-  // ]);
-  // console.log(videoUploadAggregationPipeline , "consoling video aggregation")
   return res
     .status(200)
     .json(new ApiResponse(200, video, "Successfully video uploaded"));
 });
 
-//Get all the video of all user to populate all the video like the youtube landing page
+// get all the video of all user to populate all the video like the youtube landing page
 
 const getAllVideos = asyncHandler(async (req, res) => {
   const {
     page = 1,
     limit = 10,
-    query,
-    // sortBy,
     sortType /*userId*/,
   } = req.query;
-  // console.log({ page, limit, query, /*sortBy */ sortType /*userId*/ });
+  
   
   let sortField;
   if (sortType === "recent") {
@@ -167,7 +129,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
 const videoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
 
-  // Step 1: Retrieve the document
+
   const videoOwner = await Video.aggregate([
     {
       $match: {
@@ -205,19 +167,17 @@ const videoById = asyncHandler(async (req, res) => {
     }
   ]);
 
-  if (videoOwner.length === 0) {
-    return res.status(404).json({ message: 'Video not found' });
+  if (!videoOwner.length) {
+    throw new ApiError(404 , "Video not found, Make sure to give correct video id")
   }
 
-  const video = videoOwner[0];
 
-  // Step 2: Update the document using $addToSet to ensure uniqueness
   const updateResult = await Video.updateOne(
     { _id: new mongoose.Types.ObjectId(videoId) },
     { $addToSet: { userWatched: req.user._id } } // $addToSet prevents duplicates
   );
 
-  // Fetch the updated document
+
   const updatedVideo = await Video.findById(videoId).populate('owner', '-password -videoUpload -createdAt -updatedAt -email -coverImage -watchHistory -refreshToken -__v');
 
   // Return the updated video with necessary fields
