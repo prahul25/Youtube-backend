@@ -121,7 +121,10 @@ const getAllVideos = asyncHandler(async (req, res) => {
 // get the video by video id
 const videoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-
+  const video = await Video.findById(videoId); // because may be someone entering deleted video id
+  if (!video) {
+    throw new ApiError(400, "Entered video id is invalid");
+  }
   const videoOwner = await Video.aggregate([
     {
       $match: {
@@ -168,9 +171,12 @@ const videoById = asyncHandler(async (req, res) => {
 
   const updateResult = await Video.updateOne(
     { _id: new mongoose.Types.ObjectId(videoId) },
-    { $addToSet: { userWatched: req.user._id } , $set:{
-      views: videoOwner[0].views + 1
-    }} // $addToSet prevents duplicates
+    {
+      $addToSet: { userWatched: req.user._id },
+      $set: {
+        views: videoOwner[0].views + 1,
+      },
+    } // $addToSet prevents duplicates And view will count no.of user
   );
 
   const updatedVideo = await Video.findById(videoId).populate(
@@ -195,10 +201,16 @@ const updateVideoDetails = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   const userId = req.user._id;
 
-  const video = await Video.findById(videoId);
+  const video = await Video.findById(videoId); // because may be someone entering deleted video id
+  if (!video) {
+    throw new ApiError(400, "Entered video id is invalid");
+  }
 
   if (!video.owner.equals(userId)) {
-    throw new ApiError(400, "User Unautorized to update video details, Only owner of video update video details");
+    throw new ApiError(
+      400,
+      "User Unautorized to update video details, Only owner of video update video details"
+    );
   }
   const updatedVideo = await Video.findByIdAndUpdate(
     videoId,
@@ -213,9 +225,47 @@ const updateVideoDetails = asyncHandler(async (req, res) => {
       new: true,
     }
   );
-  
+
   return res
     .status(200)
-    .json(new ApiResponse(200, updatedVideo, "Video details updated successfully"));
+    .json(
+      new ApiResponse(200, updatedVideo, "Video details updated successfully")
+    );
 });
-export { uploadVideoAndInfo, getAllVideos, videoById, updateVideoDetails };
+
+const deleteVideo = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
+  const userId = req.user._id;
+  const video = await Video.findById(videoId); // because may be someone entering with deleted video id
+
+  if (!video) {
+    throw new ApiError(400, "Entered video id is invalid");
+  }
+  if (!video.owner.equals(userId)) {
+    throw new ApiError(
+      400,
+      "User Unautorized to delte video, Only owner of video delete video"
+    );
+  }
+
+  const deletedVideo = await Video.findByIdAndDelete({
+    _id: videoId,
+    owner: userId,
+  });
+
+  if (!deletedVideo) {
+    throw new ApiError(500, "Failed to delete video");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, video, "Successfully video deleted"));
+});
+
+export {
+  uploadVideoAndInfo,
+  getAllVideos,
+  videoById,
+  updateVideoDetails,
+  deleteVideo,
+};
