@@ -168,7 +168,9 @@ const videoById = asyncHandler(async (req, res) => {
 
   const updateResult = await Video.updateOne(
     { _id: new mongoose.Types.ObjectId(videoId) },
-    { $addToSet: { userWatched: req.user._id } } // $addToSet prevents duplicates
+    { $addToSet: { userWatched: req.user._id } , $set:{
+      views: videoOwner[0].views + 1
+    }} // $addToSet prevents duplicates
   );
 
   const updatedVideo = await Video.findById(videoId).populate(
