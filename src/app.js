@@ -20,11 +20,12 @@ app.use(cookieParser()) // this line through we are getting cookie from response
 
 import userRouter from "./routes/user.routes.js";
 import userVideo from "./routes/video.routes.js"
-
+import userComment from "./routes/comment.routes.js"
 
 // routes declaration
 app.use("/api/v1/users" , userRouter) // http:localhost:8000/api/v1/users/register
 app.use("/api/v1/video" , userVideo)
+app.use("/api/v1/comment" , userComment)
 
 
 export {app}
