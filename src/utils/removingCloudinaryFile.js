@@ -6,7 +6,7 @@ const removingCloudinaryFile = async (filePath) =>{
         if(!filePath) return null
         
         const response = await cloudinary.uploader.destroy(filePath)
-        // console.log(response, "deleted successfully")
+        console.log(response, "deleted successfully")
         return response
     } catch (error) {
         return null

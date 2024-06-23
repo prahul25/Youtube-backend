@@ -4,7 +4,8 @@ import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
-import { removingCloudinaryFile } from "../utils/removingCloudinaryFile.js";
+import { deleteVideoFromCloudinary } from "../utils/deletingCloudinaryVideoFile.js";
+import { publicId } from "../utils/getPublicIdFromUrl.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
@@ -238,15 +239,28 @@ const deleteVideo = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const video = await Video.findById(videoId); // because may be someone entering with deleted video id
 
+
+  
   if (!video) {
     throw new ApiError(400, "Entered video id is invalid");
   }
   if (!video.owner.equals(userId)) {
     throw new ApiError(
       400,
-      "User Unautorized to delte video, Only owner of video delete video"
+      "User Unautorized to delete video, Only owner of video delete video"
     );
   }
+
+  const publicIdFromUrl = publicId(video.videoFile);
+
+  const deletingVideoFileFromCloudinary =
+    await deleteVideoFromCloudinary(publicIdFromUrl);
+
+  if (deletingVideoFileFromCloudinary.result !== "ok") {
+    throw new ApiError(400, "Failed to delete old cloundinary file");
+  }
+    // first get public id from url
+
 
   const deletedVideo = await Video.findByIdAndDelete({
     _id: videoId,
@@ -256,10 +270,9 @@ const deleteVideo = asyncHandler(async (req, res) => {
   if (!deletedVideo) {
     throw new ApiError(500, "Failed to delete video");
   }
-
   return res
     .status(200)
-    .json(new ApiResponse(200, video, "Successfully video deleted"));
+    .json(new ApiResponse(200, {}, "Successfully video deleted"));
 });
 
 export {
