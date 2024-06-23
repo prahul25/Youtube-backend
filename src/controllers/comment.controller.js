@@ -8,8 +8,8 @@ const addCommentToVideo = asyncHandler(async (req, res) => {
   const { content } = req.body;
   const { _id } = req.user;
 
-  if(!content){
-    throw new ApiError(400 , "Comment is required")
+  if (!content) {
+    throw new ApiError(400, "Comment is required");
   }
 
   const comment = await Comment.create({
@@ -18,12 +18,17 @@ const addCommentToVideo = asyncHandler(async (req, res) => {
     video: videoId,
   });
 
-if(!comment){
-    throw new ApiError(500 , "Internal server error, Unable to Add comment on video")
-}
+  if (!comment) {
+    throw new ApiError(
+      500,
+      "Internal server error, Unable to Add comment on video"
+    );
+  }
   return res
     .status(200)
-    .json(new ApiResponse(200,comment, "Comment added successfully to the video"));
+    .json(
+      new ApiResponse(200, comment, "Comment added successfully to the video")
+    );
 });
 
 const getVideoComments = asyncHandler(async (req, res) => {
@@ -39,10 +44,33 @@ const getVideoComments = asyncHandler(async (req, res) => {
 
 const updateVideoComment = asyncHandler(async (req, res) => {
   const { commentId } = req.params;
-  // Your logic to update a comment goes here
+  const { newComment } = req.body;
+
+  const comment = await Comment.findByIdAndUpdate(
+    commentId,
+    {
+      $set: {
+        content: newComment,
+      },
+    },
+    { new: true }
+  );
+  if (!comment) {
+    throw new ApiError(
+      500,
+      "Internal server error, Unable to Add comment on video"
+    );
+  }
+
   return res
     .status(200)
-    .json(new ApiResponse(200, "Comment updated successfully for the video"));
+    .json(
+      new ApiResponse(
+        200,
+        comment,
+        "Comment updated successfully for the video"
+      )
+    );
 });
 
 const deleteVideoComment = asyncHandler(async (req, res) => {
