@@ -126,4 +126,67 @@ const fetchVideoLikes = asyncHandler(async (req, res) => {
   
 });
 
-export { toggleVideoLike, toggleCommentLike, toggleTweetLike, fetchVideoLikes };
+const fetchCommentLikes = asyncHandler(async (req, res) => {
+  const {commentId} = req.params
+
+  const like = await Like.aggregate([
+      {
+        $match: {
+          comment:new mongoose.Types.ObjectId(commentId)
+        }
+      },
+      {
+          $group: {
+              _id: "$comment",
+              count: { $sum: 1 }
+          }
+      },
+      {
+              $project: {
+                  _id: 0,
+                  commentId: "$_id",
+                  count: 1
+              }
+          }
+    ])
+
+    if (like.length > 0) {
+      return res.status(200).json(new ApiResponse(200, like[0], "Comment like fetched successfully"));
+  } else {
+      return res.status(200).json(new ApiResponse(200, { commentId, count: 0 }, "Comment like fetched successfully"));
+  }
+
+});
+
+const fetchTweetLikes = asyncHandler(async (req, res) => {
+  const {tweetId} = req.params
+
+  const like = await Like.aggregate([
+      {
+        $match: {
+          tweet:new mongoose.Types.ObjectId(tweetId)
+        }
+      },
+      {
+          $group: {
+              _id: "$tweet",
+              count: { $sum: 1 }
+          }
+      },
+      {
+              $project: {
+                  _id: 0,
+                  tweetId: "$_id",
+                  count: 1
+              }
+          }
+    ])
+
+    if (like.length > 0) {
+      return res.status(200).json(new ApiResponse(200, like[0], "Tweet like fetched successfully"));
+  } else {
+      return res.status(200).json(new ApiResponse(200, { tweetId, count: 0 }, "Tweet like fetched successfully"));
+  }
+
+});
+export { toggleVideoLike, toggleCommentLike, toggleTweetLike, fetchVideoLikes, fetchCommentLikes, fetchTweetLikes };

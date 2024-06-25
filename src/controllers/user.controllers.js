@@ -195,7 +195,9 @@ const logoutUser = asyncHandler(async (req, res) => {
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
+  //asyncHandler =>  Without this, if an error occurs in an asynchronous operation (such as database queries or JWT verification), it would not be caught by the default Express error handler. Instead, the error would cause the server to hang or crash. The asyncHandler ensures that such errors are caught and passed to the Express error-handling middleware using next(e)
   try {
+    // This try-catch block is used to handle errors that occur during the specific operations involved in refreshing the access token
     const incomingRefreshToken =
       req.cookies.refreshToken || req.body.refreshToken;
 
@@ -567,13 +569,12 @@ const getWatchHistory = asyncHandler(async (req, res) => {
           },
         ],
       },
-      
     },
     {
-      $project:{
-        watchHistory:1
-      }
-    }
+      $project: {
+        watchHistory: 1,
+      },
+    },
   ]);
 
   return res
