@@ -8,8 +8,8 @@ const createTweet = asyncHandler(async (req, res) => {
   const { _id } = req.user;
   const { content } = req.body;
 
-  if (content.trim() === "") {
-    new ApiError(400, "Tweet content can't be empty");
+  if (!content || content.trim() === "") {
+    throw new ApiError(400, "Tweet content can't be empty");
   }
 
   const tweet = await Tweet.create({
@@ -29,6 +29,10 @@ const updateTweet = asyncHandler(async (req, res) => {
   const { tweetId } = req.params;
   const { content } = req.body;
 
+  if (!content || content.trim() === "") {
+    throw new ApiError(400, "Tweet content can't be empty");
+  }
+  
   const tweet = await Tweet.findByIdAndUpdate(
     tweetId,
     {
