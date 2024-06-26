@@ -10,7 +10,6 @@ import {
   getUserDetails,
   updateAccountDetails,
   getUserChannelProfile,
-  getUploadedVideos,
   getWatchHistory,
 } from "../controllers/user.controllers.js";
 import { upload } from "../middlewares/multer.middlewares.js";
@@ -53,6 +52,5 @@ router.route("/update-user-details").patch(verifyJWT, updateAccountDetails); // 
 
 router.route("/c/:username").get(verifyJWT, getUserChannelProfile);
 
-router.route("/uploaded-videos").get(verifyJWT, getUploadedVideos);
 router.route("/watch-history").get(verifyJWT, getWatchHistory);
 export default router;

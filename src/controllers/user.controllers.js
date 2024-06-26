@@ -462,72 +462,6 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     );
 });
 
-// const getUploadedVideos = asyncHandler
-
-const getUploadedVideos = asyncHandler(async (req, res) => {
-  const user = await User.aggregate([
-    {
-      $match: {
-        _id: new mongoose.Types.ObjectId(req.user._id),
-      },
-    },
-    {
-      $lookup: {
-        from: "videos", // here we have to find for Video model but in database all model are lowercased and it plural
-        localField: "videoUpload",
-        foreignField: "_id",
-        as: "videoUploaded",
-        pipeline: [
-          {
-            $project: {
-              videoFile: 1,
-              thumbnail: 1,
-              title: 1,
-              duration: 1,
-              views: 1,
-              userWatched: 1,
-            },
-          },
-          // {
-          // $lookup:{
-          //   from:"users",
-          //   localField:"owner",
-          //   foreignField:"_id",
-          //   as:"owner",
-          // pipeline:[
-          //   {
-          //     $project:{
-          //       fullName:1,
-          //       username:1,
-          //       avatar:1
-          //     }
-          //   }
-          // ]
-          //   }
-          // },
-          // {
-          //   $addFields:{ // modifying the owner
-          //     owner:{
-          //       $first:"$owner"
-          //     }
-          //   }
-          // }
-        ],
-      },
-    },
-  ]);
-  // console.log(user[0].videoUploaded , "trying to log console")
-
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        user[0].videoUploaded,
-        "Uploaded history fetched successfully"
-      )
-    );
-});
 
 const getWatchHistory = asyncHandler(async (req, res) => {
   const video = await User.aggregate([
@@ -598,6 +532,5 @@ export {
   updateUserAvatar,
   updateUserCoverImage,
   getUserChannelProfile,
-  getUploadedVideos,
   getWatchHistory,
 };
