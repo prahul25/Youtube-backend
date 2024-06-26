@@ -24,6 +24,7 @@ import userComment from "./routes/comment.routes.js"
 import userLike from "./routes/like.routes.js"
 import userPlaylist from "./routes/playlist.routes.js"
 import userTweet from "./routes/tweet.routes.js"
+import userSubscribe from "./routes/subscription.routes.js"
 
 // routes declaration
 app.use("/api/v1/users" , userRouter) // http:localhost:8000/api/v1/users/register
@@ -32,5 +33,6 @@ app.use("/api/v1/comment" , userComment)
 app.use("/api/v1/like" , userLike)
 app.use("/api/v1/playlist" , userPlaylist)
 app.use("/api/v1/tweet" , userTweet)
+app.use("/api/v1/subscribe" , userSubscribe)
 
 export {app}
