@@ -41,7 +41,7 @@ return res
 .json(
   new ApiResponse(
     200,subscribe,
-    "Successfully fetched subscriber count whom channel subscribed by user"
+    "Successfully fetched channel count (who subscribed other channel)"
 )
 );
 });
@@ -120,7 +120,7 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
         .json(
           new ApiResponse(
             200,subscribe,
-            "Successfully fetched subscribed channel count whom subscribed by channel"
+            "Successfully fetched subscriber (subscribe by other user)l"
           )
         );
 });

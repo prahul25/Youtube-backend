@@ -36,8 +36,8 @@ const createPlaylist = asyncHandler(async (req, res) => {
   }
 
   return res
-    .status(200)
-    .json(new ApiResponse(200, playlist, "Successfully playlist updated"));
+    .status(201)
+    .json(new ApiResponse(201, playlist, "Successfully playlist created"));
 });
 
 const updatePlaylist = asyncHandler(async (req, res) => {
@@ -59,7 +59,7 @@ const updatePlaylist = asyncHandler(async (req, res) => {
   }
   return res
     .status(200)
-    .json(new ApiResponse(200, playlist, "Successfully playlist created"));
+    .json(new ApiResponse(200, playlist, "Successfully playlist updated"));
 });
 
 const removePlaylist = asyncHandler(async (req, res) => {
@@ -132,7 +132,7 @@ const getPlaylist = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, playlist, "Successfully playlist found"));
+    .json(new ApiResponse(200, playlist, "Playlist fetched successfully"));
 });
 
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
@@ -199,7 +199,7 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
     }
   return res
     .status(200)
-    .json(new ApiResponse(200, playlist,"Successfully playlist fetched from userId"));
+    .json(new ApiResponse(200, playlist,"Playlist fetched successfully"));
 });
 
 export {

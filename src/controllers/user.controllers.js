@@ -7,6 +7,7 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
 import { publicId } from "../utils/getPublicIdFromUrl.js";
 import mongoose from "mongoose";
+
 const generateAccessAndRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId);
@@ -14,12 +15,12 @@ const generateAccessAndRefreshToken = async (userId) => {
     const refreshToken = user.generateRefreshToken();
 
     // throuh below line we are adding our refersh token in user
-    // console.log(refreshToken , "Before")
+
     user.refreshToken = await refreshToken;
-    // console.log(refreshToken , "After")
+
     // through below line we are saving only refersh token if we directly do save it leads it wants password
     await user.save({ validateBeforeSave: false }); // To bypass the token validation in order to update the refreshToken
-    // console.log(user)
+
     return { accessToken, refreshToken };
   } catch (error) {
     throw new ApiError(
@@ -56,11 +57,10 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(409, "User with email or username already exsits");
   }
 
-  // req.files because we implement the middleware which throught we got req.files through that we get directly excess the file
-  // we got this from multer
-  // try to console.log the req.files to know more about
+  // req.files because we implement the middleware which throught we got req.files through that we get directly excess the file we got this from multer
+
   const avatarLocalPath = req.files?.avatar[0].path; // in this case we have more than file with same name with the help of [0] it takes first file
-  // console.log(req.files.avatar[0].path , "consoling log req.files")
+
   let coverImageLocalPath;
 
   if (
@@ -101,7 +101,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   return res
     .status(201)
-    .json(new ApiResponse(200, createdUser, "User registered successfully"));
+    .json(new ApiResponse(201, createdUser, "User registered successfully"));
 });
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -114,8 +114,7 @@ const loginUser = asyncHandler(async (req, res) => {
   // Step 5 : Send cookies
 
   const { username, email, password } = req.body;
-  // const existedUserName = await User.findOne({ username: username });
-  // console.log(existedUserName , "trying to console");
+
   if (!(username || email)) {
     throw new ApiError(400, "Username or Email field is required");
   }
@@ -140,7 +139,7 @@ const loginUser = asyncHandler(async (req, res) => {
   accessToken = await accessToken;
 
   const loggedInUser = await User.findById(user._id).select(
-    "-password -refreshToken"
+    "-password -refreshToken -videoUpload -watchHistory"
   );
 
   const options = {
@@ -148,7 +147,7 @@ const loginUser = asyncHandler(async (req, res) => {
     httpOnly: true,
     secure: true,
   };
-  // console.log(accessToken , "printing out the both access and referesh token")
+
   return res
     .status(200)
     .cookie("accessToken", accessToken, options)
@@ -168,7 +167,6 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
-  // Step 1 : Just clear the tokens and also the cookies in which we sending user details
   const logoutUser = await User.findByIdAndUpdate(
     req.user._id,
     {
@@ -204,7 +202,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     if (!incomingRefreshToken) {
       throw new ApiError(401, "Unauthorized access");
     }
-    // console.log(incomingRefreshToken, "consoling the decoded token")
+
     const decodedToken = jwt.verify(
       incomingRefreshToken,
       process.env.REFRESH_TOKEN_SECRET
@@ -215,9 +213,9 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     if (!user) {
       throw new ApiError(401, "Invalid refresh token");
     }
-    // console.log(user , "before generating the token")
+
     if (incomingRefreshToken !== user.refreshToken) {
-      // here we have taken the incomingrefrehs because both tokens are encoded when we add databases and send to the cookies both are encoded
+      // here we have taken the incoming refresh token because both tokens are encoded when we add databases and send to the cookies both are encoded
       throw new ApiError(401, "Refresh token expired");
     }
 
@@ -229,10 +227,10 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     let { accessToken, refreshToken } = await generateAccessAndRefreshToken(
       user._id
     );
-    user.refreshToken = await refreshToken; // changes
+    user.refreshToken = await refreshToken;
     accessToken = await accessToken;
     refreshToken = await refreshToken;
-    // console.log({accessToken , refreshToken} , "generating the new access and refreshtoken")
+
     res
       .status(200)
       .cookie("accessToken", accessToken, options)
@@ -251,29 +249,32 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
 const updatePassword = asyncHandler(async (req, res) => {
   const { username, email, oldPassword, newPassword } = await req.body;
-  // console.log({ username, email, oldPassword, newPassword })
+
   const user =
     (await User.findById(req.user?._id)) ||
     (await User.findOne({ $or: [{ username }, { email }] }));
-  // console.log(user)
+
   const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
   if (!isPasswordCorrect) {
     throw new ApiError(400, "Invalid old password");
+  }
+
+  const existedPassword = await user.isPasswordCorrect(newPassword);
+  if (existedPassword) {
+    throw new ApiError(406, "Your new password cannot same as old one");
   }
   user.password = await newPassword;
   await user.save({ validateBeforeSave: false });
 
   return res
     .status(200)
-    .json(new ApiResponse(200, {}, "Password changed successfully"));
-});
-
-const getUserDetails = asyncHandler(async (req, res) => {
-  // console.log(req.user);
-  const user = req.user;
-  return res
-    .status(200)
-    .json(new ApiResponse(200, user, "Current user fetched successfully"));
+    .json(
+      new ApiResponse(
+        200,
+        { newPassword: newPassword },
+        "Password changed successfully"
+      )
+    );
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
@@ -283,11 +284,15 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All fields are required");
   }
 
+  if (newUserName === req.user.username) {
+    throw new ApiError(406, "Your old username cannot same as new one");
+  }
+
   const existedUserName = await User.findOne({ username: newUserName });
-  // console.log(existedUserName);
+
   if (existedUserName) {
     throw new ApiError(
-      400,
+      406,
       "Already username is acquired, try with different username"
     );
   }
@@ -295,7 +300,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     req.user._id,
     {
       $set: {
-        fullName: newFullName, // ES6 syntax
+        fullName: newFullName,
         email: newEmail,
         username: newUserName || existedUserName,
       },
@@ -310,10 +315,17 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     );
 });
 
+const getUserDetails = asyncHandler(async (req, res) => {
+  const user = req.user
+  
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Current user fetched successfully"));
+});
+
 const updateUserAvatar = asyncHandler(async (req, res) => {
-  // console.log(req.file.path,"uy")
   const oldAvatar = req.user.avatar;
-  // console.log(oldAvatar);
+
   const avatarLocalPath = req.file.path;
 
   if (!avatarLocalPath) {
@@ -321,14 +333,13 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
   }
 
   const avatar = await uploadOnCloudinary(avatarLocalPath);
-  // console.log(avatar , "avatar")
+
   if (!avatar) {
     throw new ApiError(400, "Failed to upload avatar");
   }
 
-  // first get public id from url
   const publicIdFromUrl = publicId(oldAvatar);
-  // console.log(req.user , "req user id")
+
   const deletingOldFileFromCloudinary =
     await removingCloudinaryFile(publicIdFromUrl);
 
@@ -351,7 +362,6 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 });
 
 const updateUserCoverImage = asyncHandler(async (req, res) => {
-  // console.log(req.file)
   const oldCoverImage = req.user.coverImage;
   const coverImagwLocalPath = req.file.path;
   if (!coverImagwLocalPath) {
@@ -363,7 +373,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
   if (!coverImage) {
     throw new ApiError(400, "Failed to upload cover image");
   }
-  // console.log(oldCoverImage)
+
   const publicIdFromUrl = publicId(oldCoverImage);
 
   const deletingOldFileFromCloudinary =
@@ -454,14 +464,13 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
   if (!channel?.length) {
     throw new ApiError(404, "Channel does not existed");
   }
-  // try by consoling log the channel for better understanding what is returns
+
   return res
     .status(200)
     .json(
       new ApiResponse(200, channel[0], "User channel fetched successfully")
     );
 });
-
 
 const getWatchHistory = asyncHandler(async (req, res) => {
   const video = await User.aggregate([

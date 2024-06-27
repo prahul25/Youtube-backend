@@ -28,9 +28,9 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
       });
   
       return res
-        .status(200)
+        .status(201)
         .json(
-          new ApiResponse(200, likedVideo, "Video liked toggled successfully")
+          new ApiResponse(201, likedVideo, "Video liked toggled successfully")
         );
     }
   } catch (error) {
@@ -56,9 +56,9 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
         const likedComment = await Like.create({ likedBy: _id, comment: commentId });
     
         return res
-          .status(200)
+          .status(201)
           .json(
-            new ApiResponse(200, likedComment, "Comment liked toggled successfully")
+            new ApiResponse(201, likedComment, "Comment liked toggled successfully")
           );
       }
     } catch (error) {
@@ -84,9 +84,9 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
         const likedTweet = await Like.create({ likedBy: _id, tweet: tweetId });
     
         return res
-          .status(200)
+          .status(201)
           .json(
-            new ApiResponse(200, likedTweet, "Tweet liked toggled successfully")
+            new ApiResponse(201, likedTweet, "Tweet liked toggled successfully")
           );
       }
     } catch (error) {

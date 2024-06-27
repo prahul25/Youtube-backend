@@ -21,8 +21,8 @@ const createTweet = asyncHandler(async (req, res) => {
     new ApiError(500, "Internal server error ,unable to create tweet");
   }
   return res
-    .status(200)
-    .json(new ApiResponse(200, tweet, "Successfully tweet created"));
+    .status(201)
+    .json(new ApiResponse(201, tweet, "Successfully tweet created"));
 });
 
 const updateTweet = asyncHandler(async (req, res) => {
@@ -103,7 +103,7 @@ const getUserTweet = asyncHandler(async (req, res) => {
   }
   return res
     .status(200)
-    .json(new ApiResponse(200, tweet, "Successfully tweet fetch by userId"));
+    .json(new ApiResponse(200, tweet, "Successfully tweet fetched"));
 });
 
 export { createTweet, updateTweet, removeTweet, getUserTweet };

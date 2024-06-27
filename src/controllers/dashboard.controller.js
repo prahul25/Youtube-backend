@@ -71,6 +71,7 @@ const getUserDashboard = asyncHandler(async (req, res) => {
 
     ]);
 
+    stats[0].totalSubscribers = subscriberStats[0].count
     if (!stats.length && !subscriberStats.length) {
         return res.status(200).json(new ApiResponse(200, {
             totalVideos: 0,
@@ -81,7 +82,6 @@ const getUserDashboard = asyncHandler(async (req, res) => {
         }, "Successfully fetched user stats"));
     }
     
-    stats[0].totalSubscribers = subscriberStats[0].count
     
     return res.status(200).json(new ApiResponse(200, stats[0], "Successfully fetched user stats"));
 });

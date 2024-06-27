@@ -119,7 +119,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, allVideos, "All videos fetched successfully"));
 });
 
-// get the video by video id
+// get the video by video id and add view count
 const videoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   const video = await Video.findById(videoId); // because may be someone entering deleted video id
@@ -197,6 +197,7 @@ const videoById = asyncHandler(async (req, res) => {
     );
 });
 
+// get video details by id
 const updateVideoDetails = asyncHandler(async (req, res) => {
   const { title, thumbnail, description } = req.body;
   const { videoId } = req.params;
@@ -209,7 +210,7 @@ const updateVideoDetails = asyncHandler(async (req, res) => {
 
   if (!video.owner.equals(userId)) {
     throw new ApiError(
-      400,
+      401,
       "User Unautorized to update video details, Only owner of video update video details"
     );
   }
@@ -234,19 +235,18 @@ const updateVideoDetails = asyncHandler(async (req, res) => {
     );
 });
 
+// delete video by video id
 const deleteVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   const userId = req.user._id;
   const video = await Video.findById(videoId); // because may be someone entering with deleted video id
 
-
-  
   if (!video) {
     throw new ApiError(400, "Entered video id is invalid");
   }
   if (!video.owner.equals(userId)) {
     throw new ApiError(
-      400,
+      401,
       "User Unautorized to delete video, Only owner of video delete video"
     );
   }
@@ -259,8 +259,7 @@ const deleteVideo = asyncHandler(async (req, res) => {
   if (deletingVideoFileFromCloudinary.result !== "ok") {
     throw new ApiError(400, "Failed to delete old cloundinary file");
   }
-    // first get public id from url
-
+  // first get public id from url
 
   const deletedVideo = await Video.findByIdAndDelete({
     _id: videoId,
