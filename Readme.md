@@ -133,7 +133,7 @@ Start the backend server and use tools like Postman to interact with the API.
 - **GET /api/v1/healthCheck** -` Check server health.
 
 ## Postman Collection
-Download the Postman collection: YouTube_Backend.postman_collection.json
+Download the Postman collection: [Youtube backend.postman_collection.json](https://github.com/user-attachments/files/16026913/Youtube.backend.postman_collection.json)
 
 Import it into Postman:
 
