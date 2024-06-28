@@ -5,7 +5,7 @@ This project is a backend for a YouTube-like application built with Node.js, Exp
 ## Table of Contents
 
  - [Features](#Features)
- - [Technologies-Used](##Technologies-Used)
+ - [Technologies-Used](#Technologies-Used)
  - [Installation](#installation)
  - [Usage](#Usage)
  - [API Endpoints](#API-Endpoints)
@@ -49,7 +49,7 @@ This project is a backend for a YouTube-like application built with Node.js, Exp
 - Express.js
 - MongoDB
 - Mongoose
-## <a name="installation"></a>Installation
+## Installation
 Clone the repository:
 ```bash
 git clone https://github.com/prahul25/Youtube-backend.git
